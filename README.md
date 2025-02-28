@@ -8,10 +8,10 @@
 - 公式代码：https://github.com/gustavomoers/CollisionAvoidance-Carla-DRL-MPC
 
 ## Carla演示(目前为初调版本)
-- 视频链接：https://www.bilibili.com/video/BV1kM4y1e7h7/
+![Carla MPC](https://github.com/SavannaBlad/carla_MPC/video/demo.mp4)
 
 ## 结果演示
-- 视频链接：https://www.bilibili.com/video/BV1kM4y1e7h7/
+![Result for car](https://github.com/SavannaBlad/carla_MPC/fig/result.png)
 
 ## 系统特点
 - 基于模型预测控制（MPC）的车辆轨迹跟踪
