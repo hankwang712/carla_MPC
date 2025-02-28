@@ -43,7 +43,7 @@ https://github.com/user-attachments/assets/d373187e-b248-4d42-b631-8494094f7bfa
 2. 运行MPC控制器
    ```bash
    cd PythonAPI/examples/carla_MPC
-   python MPCController2.py
+   python MPCController.py
    ```
 
 ## 任务列表
