@@ -11,7 +11,7 @@
 ![Carla MPC](https://github.com/SavannaBlad/carla_MPC/video/demo.mp4)
 
 ## 结果演示
-![Result for car](https://github.com/SavannaBlad/carla_MPC/fig/result.png)
+![Result for car](https://github.com/SavannaBlad/carla_MPC/blob/main/fig/result.png)
 
 ## 系统特点
 - 基于模型预测控制（MPC）的车辆轨迹跟踪
