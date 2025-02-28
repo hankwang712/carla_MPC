@@ -8,7 +8,7 @@
 - 公式代码：https://github.com/gustavomoers/CollisionAvoidance-Carla-DRL-MPC
 
 ## Carla演示(目前为初调版本)
-![Carla MPC](https://github.com/SavannaBlad/carla_MPC/video/demo.mp4)
+![Carla MPC](https://github.com/SavannaBlad/carla_MPC/blob/main/video/demo.mp4)
 
 ## 结果演示
 ![Result for car](https://github.com/SavannaBlad/carla_MPC/blob/main/fig/result.png)
