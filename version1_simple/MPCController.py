@@ -6,17 +6,13 @@ import sys
 import matplotlib.pyplot as plt
 import carla
 from agents.navigation.global_route_planner import GlobalRoutePlanner
-
+from interpolate import calc_spline_course_carla  # 注意导入路径，或者直接粘到项目里
+from new import adaptive_mpc_matrices
 # State dimensions
 NX = 4  # x = x, y, v, yaw
 NU = 2  # a = [accel, steer]
 T = 5   # horizon length
 
-# MPC parameters
-R = np.diag([0.01, 0.01])   # input cost matrix
-Rd = np.diag([0.01, 3.0])   # input difference cost matrix
-Q = np.diag([1.0, 1.0, 0.5, 0.5])  # state cost matrix
-Qf = Q  # state final matrix
 STOP_SPEED = 0.5 / 3.6  # stop speed
 MAX_ITER = 3  # Max iteration
 DU_TH = 0.1  # iteration finish threshold
@@ -403,13 +399,20 @@ target_speed = 10  # target speed in m/s
 cx, cy, cyaw = [], [], []
 
 # Extract and visualize waypoints
+# 先提取waypoints坐标点
+waypoints_x = []
+waypoints_y = []
 for this_wp, _ in way_points:
     world.debug.draw_string(this_wp.transform.location, 'O', draw_shadow=False, 
                            color=carla.Color(r=0, g=255, b=0), life_time=100.0, persistent_lines=True)
-    cx.append(this_wp.transform.location.x)
-    cy.append(this_wp.transform.location.y)
-    cyaw.append(math.radians(this_wp.transform.rotation.yaw))
-cyaw = smooth_yaw(cyaw)
+    waypoints_x.append(this_wp.transform.location.x)
+    waypoints_y.append(this_wp.transform.location.y)
+
+# 使用三次样条拟合轨迹
+from cubic_spline_planner import calc_spline_course_carla  # 注意导入路径，或者直接粘到项目里
+
+# ds=0.5表示每隔0.5m采样一个轨迹点，可以根据需要调
+cx, cy, cyaw, ck, s = calc_spline_course_carla(waypoints_x, waypoints_y, yaw=math.radians(way_points[0][0].transform.rotation.yaw), ds=0.5)
 
 # Spawn ego vehicle
 vehicle_bp = blueprint_library.filter('vehicle.*')[3]
@@ -428,7 +431,7 @@ BACKTOWHEEL = 1.0  # [m]
 WHEEL_LEN = 0.3  # [m]
 WHEEL_WIDTH = 0.2  # [m]
 TREAD = 0.7  # [m]
-WB = 2.5  # [m]
+WB = vehicle_W-WHEEL_WIDTH  # [m]
 
 
 ego_transform = ego.get_transform()
@@ -513,13 +516,22 @@ try:
         path_x.append(state.x)
         path_y.append(state.y)
         
-        print(f"\nIteration {control_iteration}")
-        print(f"Current state - x: {state.x:.2f}, y: {state.y:.2f}, v: {state.v:.2f}, yaw: {math.degrees(state.yaw):.2f}°")
+        # print(f"\nIteration {control_iteration}")
+        # print(f"Current state - x: {state.x:.2f}, y: {state.y:.2f}, v: {state.v:.2f}, yaw: {math.degrees(state.yaw):.2f}°")
         
         # Find nearest reference point
         nearest_ind, _ = calc_nearest_index(state, cx, cy, cyaw, 0)
-        print(f"Nearest reference point: index {nearest_ind}, pos: ({cx[nearest_ind]:.2f}, {cy[nearest_ind]:.2f})")
-        
+        # print(f"Nearest reference point: index {nearest_ind}, pos: ({cx[nearest_ind]:.2f}, {cy[nearest_ind]:.2f})")
+        tracking_error = np.sqrt((state.x - cx[nearest_ind])**2 + (state.y - cy[nearest_ind])**2)
+    
+    # 使用自适应矩阵
+        Q, Qf, R, Rd = adaptive_mpc_matrices(
+            state, cx, cy, cyaw, 
+            nearest_ind, target_ind, 
+            tracking_error=tracking_error,
+            enable_dynamic=True,  # 设置为False可以禁用动态调整
+            debug_output=(control_iteration % 20 == 0)  # 每20次迭代输出一次调试信息
+    )
         # Update target index for progress tracking
         if target_ind < nearest_ind:
             target_ind = nearest_ind
@@ -538,7 +550,7 @@ try:
             print("WARNING: MPC solver failed to find solution")
             a, delta = 0.5, 0.0  # fallback control values
         
-        print(f"MPC output - Acceleration: {a:.4f}, Steering angle: {math.degrees(delta):.2f}°")
+        # print(f"MPC output - Acceleration: {a:.4f}, Steering angle: {math.degrees(delta):.2f}°")
         
         # Convert MPC outputs to CARLA control inputs
         if a >= 0.0:
@@ -555,7 +567,7 @@ try:
         steer_history.append(steer)
         brake_history.append(brake)
         
-        print(f"Control outputs - Throttle: {throttle:.4f}, Steering: {steer:.4f}, Brake: {brake:.4f}")
+        # print(f"Control outputs - Throttle: {throttle:.4f}, Steering: {steer:.4f}, Brake: {brake:.4f}")
         
         # Apply control to vehicle
         ego_control = carla.VehicleControl(
