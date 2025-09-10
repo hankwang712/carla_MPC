@@ -24,11 +24,11 @@
 
 ## 🌲Carla演示
 
-https://github.com/user-attachments/assets/d373187e-b248-4d42-b631-8494094f7bfa
+https://github.com/user-attachments/assets/1162bb94-ba36-4016-a4c4-fb11cef6d598
 
 ## 结果演示
 <p align="center">
-  <img src="fig/strong_control_result.png" alt="result" width="500">
+  <img src="fig/strong_control_result.png" alt="result" width="800">
 </p>
 
 ## 系统特点
